@@ -10,30 +10,27 @@ const generateToken = (userId: number) => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
 };
 
+// REGISTRO DE USUÁRIO
+
 export const registerUser = async (req: Request, res: Response) => {
   try {
     const { nome, email, senha, confirmarSenha } = req.body;
 
-    // Verifica se as senhas coincidem
     if (senha !== confirmarSenha) {
       return res.status(400).json({ status: "error", message: "As senhas não coincidem" });
     }
 
-    // Verifica se já existe usuário com o mesmo e-mail
     const userExists = await prisma.usuario.findUnique({ where: { email } });
     if (userExists) {
       return res.status(400).json({ status: "error", message: "Email já cadastrado" });
     }
 
-    // Gera hash da senha
     const senhaHash = await bcrypt.hash(senha, 10);
 
-    // Cria usuário no banco
     const newUser = await prisma.usuario.create({
       data: { nome, email, senhaHash },
     });
 
-    // Gera token JWT
     const token = generateToken(newUser.id);
 
     return res.status(201).json({
@@ -49,23 +46,26 @@ export const registerUser = async (req: Request, res: Response) => {
   }
 };
 
+// LOGIN DE USUÁRIO
+
 export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, senha } = req.body;
 
-    // Busca usuário pelo e-mail
+    if (!email || !senha) {
+      return res.status(400).json({ status: "error", message: "E-mail e senha são obrigatórios" });
+    }
+
     const user = await prisma.usuario.findUnique({ where: { email } });
     if (!user) {
-      return res.status(400).json({ status: "error", message: "Credenciais inválidas" });
+      return res.status(404).json({ status: "error", message: "E-mail não encontrado" });
     }
 
-    // Confere se a senha é válida
     const senhaValida = await bcrypt.compare(senha, user.senhaHash);
     if (!senhaValida) {
-      return res.status(400).json({ status: "error", message: "Credenciais inválidas" });
+      return res.status(401).json({ status: "error", message: "Senha incorreta" });
     }
 
-    // Gera token JWT
     const token = generateToken(user.id);
 
     return res.status(200).json({
