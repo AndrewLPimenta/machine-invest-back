@@ -22,10 +22,11 @@ export const calcularPerfil = async (req: Request, res: Response) => {
       (sum: number, r: { opcao: { pontuacao: number } }) => sum + r.opcao.pontuacao,
       0
     );
+    
     let idPerfil: number;
-    if (totalPontuacao <= 10) idPerfil = 1; // Conservador
-    else if (totalPontuacao <= 20) idPerfil = 2; // Moderado
-    else idPerfil = 3; // Agressivo
+    if (totalPontuacao <= 10) idPerfil = 1; 
+    else if (totalPontuacao <= 20) idPerfil = 2; 
+    else idPerfil = 3; 
 
     const resultadoExistente = await prisma.resultadoUsuario.findFirst({
       where: { idUsuario },

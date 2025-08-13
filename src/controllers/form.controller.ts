@@ -20,6 +20,7 @@ export const getFormulario = async (req: Request, res: Response) => {
 
     res.json(formulario);
   } catch (error) {
+    console.error('Erro no getFormulario:', error);
     res.status(500).json({ error: "Erro ao buscar formulário" });
   }
 };
