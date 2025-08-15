@@ -8,6 +8,7 @@ import answerRoutes from './routes/answer.routes';
 import resultRoutes from './routes/result.routes';
 import profileInvest from './routes/profile.routes';
 import userRoutes from "./routes/user.routes";
+import cryptoRoutes from './routes/crypto.routes';
 
 dotenv.config();
 
@@ -23,5 +24,6 @@ app.use('/api/respostas', answerRoutes);
 app.use('/api/resultado', resultRoutes);
 app.use('/api/perfil', profileInvest);
 app.use('/api/usuario', userRoutes);
+app.use('/api/cripto', cryptoRoutes);
 
 export default app;

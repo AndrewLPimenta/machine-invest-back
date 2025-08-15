@@ -24,7 +24,7 @@ export const calcularPerfil = async (req: Request, res: Response) => {
     );
     
     let idPerfil: number;
-    if (totalPontuacao <= 10) idPerfil = 1; 
+    if (totalPontuacao <= 11) idPerfil = 1; 
     else if (totalPontuacao <= 20) idPerfil = 2; 
     else idPerfil = 3; 
 
