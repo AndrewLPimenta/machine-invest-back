@@ -1,6 +1,36 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma/client";
 
+// Buscar perfil do usuário
+export const getPerfilUsuario = async (req: Request, res: Response) => {
+  try {
+    const { idUsuario } = req.params;
+
+    const resultado = await prisma.resultadoUsuario.findFirst({
+      where: { idUsuario: Number(idUsuario) },
+      include: { perfil: true },
+    });
+
+    if (!resultado) {
+      return res.status(404).json({ error: "Resultado não encontrado" });
+    }
+
+    const totalPerguntas = await prisma.pergunta.count();
+    const percentual = Math.round((resultado.pontuacaoTotal / (totalPerguntas * 3)) * 100);
+
+    res.json({
+      perfil: resultado.perfil,
+      pontuacao: resultado.pontuacaoTotal,
+      percentual,
+      dataClassificacao: resultado.dataClassificacao,
+    });
+  } catch (error) {
+    console.error("Erro ao buscar perfil:", error);
+    res.status(500).json({ error: "Erro ao buscar perfil" });
+  }
+};
+
+// Calcular perfil do usuário
 export const calcularPerfil = async (req: Request, res: Response) => {
   try {
     const { idUsuario } = req.body;
@@ -9,6 +39,10 @@ export const calcularPerfil = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "idUsuario é obrigatório" });
     }
 
+    // Buscar total de perguntas do formulário
+    const totalPerguntas = await prisma.pergunta.count();
+
+    // Buscar respostas do usuário
     const respostas = await prisma.respostaUsuario.findMany({
       where: { idUsuario },
       include: { opcao: true },
@@ -18,16 +52,29 @@ export const calcularPerfil = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Usuário não possui respostas" });
     }
 
-    const totalPontuacao = respostas.reduce(
-      (sum: number, r: { opcao: { pontuacao: number } }) => sum + r.opcao.pontuacao,
-      0
-    );
-    
-    let idPerfil: number;
-    if (totalPontuacao <= 11) idPerfil = 1; 
-    else if (totalPontuacao <= 20) idPerfil = 2; 
-    else idPerfil = 3; 
+    if (respostas.length < totalPerguntas) {
+      return res.status(400).json({
+        error: `Faltam respostas. Você respondeu ${respostas.length} de ${totalPerguntas} perguntas.`,
+      });
+    }
 
+    // Somar pontuação total garantindo que seja numérica
+    const totalPontuacao = respostas.reduce((sum, r) => {
+      const pontuacao = Number(r.opcao?.pontuacao ?? 0);
+      return sum + pontuacao;
+    }, 0);
+
+    // Calcular percentual
+    const pontuacaoMaxima = totalPerguntas * 3;
+    const percentual = (totalPontuacao / pontuacaoMaxima) * 100;
+
+    // Determinar perfil baseado no percentual
+    let idPerfil: number;
+    if (percentual <= 47) idPerfil = 1;      // Conservador
+    else if (percentual <= 73) idPerfil = 2; // Moderado
+    else idPerfil = 3;                        // Agressivo
+
+    // Criar ou atualizar resultado do usuário
     const resultadoExistente = await prisma.resultadoUsuario.findFirst({
       where: { idUsuario },
     });
@@ -47,32 +94,19 @@ export const calcularPerfil = async (req: Request, res: Response) => {
           idUsuario,
           idPerfil,
           pontuacaoTotal: totalPontuacao,
+          dataClassificacao: new Date(),
         },
       });
     }
 
-
-    res.json({ message: "Perfil calculado", perfilId: idPerfil, pontuacao: totalPontuacao });
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao calcular perfil" });
-  }
-};
-
-export const getPerfilUsuario = async (req: Request, res: Response) => {
-  try {
-    const { idUsuario } = req.params;
-
-    const resultado = await prisma.resultadoUsuario.findFirst({
-      where: { idUsuario: Number(idUsuario) },
-      include: { perfil: true },
+    res.json({
+      message: "Perfil calculado com sucesso",
+      perfilId: idPerfil,
+      pontuacao: totalPontuacao,
+      percentual: Math.round(percentual),
     });
-
-    if (!resultado) {
-      return res.status(404).json({ error: "Resultado não encontrado" });
-    }
-
-    res.json({ perfil: resultado.perfil, pontuacao: resultado.pontuacaoTotal });
   } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar perfil" });
+    console.error("Erro ao calcular perfil:", error);
+    res.status(500).json({ error: "Erro ao calcular perfil" });
   }
 };
