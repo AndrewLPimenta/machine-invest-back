@@ -1,36 +1,41 @@
-import { Request, Response } from 'express';
-import axios from 'axios';
+// src/controllers/tesouro.controller.ts
+import { Request, Response } from "express";
 
-interface TituloTesouro {
-  isin: string;
-  name: string;
-  due_date: string;
-  index: string;
-  minimum_value: number;
-  price: number;
-  rate: number;
-  reference_date: string;
+interface TituloConservador {
+  nome: string;
+  vencimento: string;
+  rentabilidade: number;
+  precoUnitario: number;
 }
 
-const TOKEN = 'seu_token_aqui';
-
-export const fetchTesouro = async (req: Request, res: Response): Promise<void> => {
+export const fetchTesouro = async (req: Request, res: Response) => {
   try {
-    const response = await axios.get<TituloTesouro[]>(
-      'https://api.dadosdemercado.com.br/v1/treasury',
-      { headers: { Authorization: `Bearer ${TOKEN}` } }
-    );
+    const titulos: TituloConservador[] = [
+      {
+        nome: "Tesouro Selic 2027",
+        vencimento: "01/05/2027",
+        rentabilidade: 13.15,
+        precoUnitario: 102.34,
+      },
+      {
+        nome: "Tesouro Prefixado 2029",
+        vencimento: "01/01/2029",
+        rentabilidade: 10.50,
+        precoUnitario: 98.76,
+      },
+      {
+        nome: "Tesouro IPCA+ 2035",
+        vencimento: "15/08/2035",
+        rentabilidade: 5.85,
+        precoUnitario: 112.50,
+      },
+    ];
 
-    const titulos = response.data;
-
-    const conservadores = titulos.filter(t =>
-      t.name.toLowerCase().includes('selic') || t.name.toLowerCase().includes('ipca')
-    );
-
-    res.json({ titulos: conservadores });
-  } catch (err: unknown) {
-    const error = err as any; // permite acessar error.response
-    console.error(error?.response?.data ?? error?.message ?? error);
-    res.status(500).json({ error: 'Erro ao buscar dados do Tesouro Direto' });
+    return res.json({ titulos });
+  } catch (err) {
+    console.error("Erro ao buscar Tesouro Direto:", err);
+    return res
+      .status(500)
+      .json({ error: "Erro ao buscar dados do Tesouro Direto" });
   }
 };
