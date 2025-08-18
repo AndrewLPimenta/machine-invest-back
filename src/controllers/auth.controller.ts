@@ -11,7 +11,6 @@ const generateToken = (userId: number) => {
 };
 
 // REGISTRO DE USUÁRIO
-
 export const registerUser = async (req: Request, res: Response) => {
   try {
     const { nome, email, senha, confirmarSenha } = req.body;
@@ -47,7 +46,6 @@ export const registerUser = async (req: Request, res: Response) => {
 };
 
 // LOGIN DE USUÁRIO
-
 export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, senha } = req.body;
@@ -56,7 +54,14 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(400).json({ status: "error", message: "E-mail e senha são obrigatórios" });
     }
 
-    const user = await prisma.usuario.findUnique({ where: { email } });
+    const user = await prisma.usuario.findUnique({
+      where: { email },
+      include: {
+        resultados: { include: { perfil: true } },
+        respostas: true,
+      },
+    });
+
     if (!user) {
       return res.status(404).json({ status: "error", message: "E-mail não encontrado" });
     }
@@ -68,12 +73,18 @@ export const loginUser = async (req: Request, res: Response) => {
 
     const token = generateToken(user.id);
 
+    // Checar se já respondeu
+    const respondeu = user.respostas.length > 0;
+    const perfil = user.resultados.length > 0 ? user.resultados[0].perfil.nomePerfil : null;
+
     return res.status(200).json({
       status: "success",
       message: "Login realizado com sucesso",
       data: {
         user: { id: user.id, nome: user.nome, email: user.email },
         token,
+        respondeu, // 👈 flag se já respondeu
+        perfil,    // 👈 nome do perfil (se tiver)
       },
     });
   } catch (error) {
