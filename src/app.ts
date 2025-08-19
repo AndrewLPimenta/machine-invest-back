@@ -8,8 +8,9 @@ import answerRoutes from './routes/answer.routes';
 import resultRoutes from './routes/result.routes';
 import profileInvest from './routes/profile.routes';
 import userRoutes from "./routes/user.routes";
-import cryptoRoutes from './routes/crypto.routes';
-import tesouroRoutes from './routes/tesouro.routes';
+import cryptoRoutes from './routes/agressivoRoutes/crypto.routes';
+import tesouroRoutes from './routes/convervadorRoutes/tesouro.routes';
+import { AcoesMercado } from './controllers/actions.controller';    
 
 dotenv.config();
 
@@ -27,5 +28,6 @@ app.use('/api/perfil', profileInvest);
 app.use('/api/usuario', userRoutes);
 app.use('/api/cripto', cryptoRoutes);
 app.use('/api', tesouroRoutes);
+app.use ('/api/acoes', AcoesMercado);
 
 export default app;
