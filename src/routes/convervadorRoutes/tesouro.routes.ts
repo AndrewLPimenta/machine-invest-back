@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { fetchTesouro } from '../../controllers/tesouro.controller';
+import { fetchTesouro } from '../../controllers/controllers.conservador/tesouro.controller';
 
 const router = Router();
 

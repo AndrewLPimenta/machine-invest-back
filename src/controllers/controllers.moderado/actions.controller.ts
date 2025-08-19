@@ -10,7 +10,7 @@ interface Acao {
 
 const tickers = [
   { ticker: "ITSA4.SA", nome: "Itaúsa" },
-  { ticker: "TAEE11.SA", nome: "Taesa" },
+  { ticker: "TAEE11.SA",nome: "Taesa" },
   { ticker: "BBAS3.SA", nome: "Banco do Brasil" },
   { ticker: "PETR4.SA", nome: "Petrobras PN" },
   { ticker: "ABEV3.SA", nome: "Ambev" },
