@@ -10,6 +10,7 @@ interface TituloConservador {
 
 export const fetchTesouro = async (req: Request, res: Response) => {
   try {
+    
     const titulos: TituloConservador[] = [
       {
         nome: "Tesouro Selic 2027",

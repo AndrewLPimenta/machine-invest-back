@@ -20,7 +20,7 @@ const io = new Server(server, {
 startBinanceStream(io);
 
 // Definindo a porta do servidor a partir das variáveis de ambiente (ambiente de desenvolvimento por enquanto)
-const PORT = process.env.PORT;
+const PORT =  process.env.PORT || 3001;
 
 // Iniciando o servidor e escutando na porta definida
 server.listen(PORT, () => {

@@ -14,7 +14,6 @@ export const salvarRespostas = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Dados inválidos" });
     }
 
-    // Verifica se o usuário existe
     const usuarioExiste = await prisma.usuario.findUnique({ where: { id: idUsuario } });
     if (!usuarioExiste) {
       return res.status(404).json({ error: "Usuário não encontrado" });
