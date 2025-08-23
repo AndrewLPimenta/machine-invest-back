@@ -44,7 +44,7 @@ export const AcoesMercado = async (req: Request, res: Response) => {
         } as Acao;
       })
     );
-
+    
     const acoes = results
       .filter(r => r.status === "fulfilled")
       .map((r: any) => r.value);

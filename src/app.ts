@@ -11,7 +11,7 @@ import userRoutes from "./routes/user.routes"; // rotas de usuário (CRUD)
 import cryptoRoutes from './routes/agressivoRoutes/crypto.routes'; // rotas de criptomoeda (agressivo)
 import tesouroRoutes from './routes/convervadorRoutes/tesouro.routes'; // rotas de tesouro (conservador)
 import { AcoesMercado } from './controllers/controllers.moderado/actions.controller'; // rotas de ações (moderado)
-import { ApostaMercado } from './controllers/controllers.agressivo/aposta.controller'; // rotas de ações (agressivo)
+import emergingTechRoutes from "./routes/agressivoRoutes/emergingTech.routes";; // rotas de ações (agressivo)
 
 dotenv.config(); //habilitando as variáveis de ambiente (privadas)
 
@@ -32,7 +32,7 @@ app.use('/api/usuario', userRoutes);
 app.use('/api/cripto', cryptoRoutes);
 app.use('/api', tesouroRoutes);
 app.use ('/api/acoes', AcoesMercado);
-app.use ('/api/apostas', ApostaMercado);
+app.use("/api/stocks", emergingTechRoutes);
 
 // Rota de teste para verificar se o servidor está funcionando
 
