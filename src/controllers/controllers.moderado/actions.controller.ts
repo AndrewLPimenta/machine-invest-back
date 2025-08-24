@@ -8,9 +8,22 @@ interface Acao {
   moeda: string | null;
 }
 
+// Tipagem da API do Yahoo Finance
+interface YahooFinanceChart {
+  chart: {
+    result?: Array<{
+      meta?: {
+        regularMarketPrice?: number;
+        currency?: string;
+      };
+    }>;
+    error?: any;
+  };
+}
+
 const tickers = [
   { ticker: "ITSA4.SA", nome: "Itaúsa" },
-  { ticker: "TAEE11.SA",nome: "Taesa" },
+  { ticker: "TAEE11.SA", nome: "Taesa" },
   { ticker: "BBAS3.SA", nome: "Banco do Brasil" },
   { ticker: "PETR4.SA", nome: "Petrobras PN" },
   { ticker: "ABEV3.SA", nome: "Ambev" },
@@ -33,7 +46,7 @@ export const AcoesMercado = async (req: Request, res: Response) => {
     const results = await Promise.allSettled(
       tickers.map(async (t) => {
         const url = `https://query1.finance.yahoo.com/v8/finance/chart/${t.ticker}`;
-        const resp = await axios.get(url);
+        const resp = await axios.get<YahooFinanceChart>(url);
         const result = resp.data.chart.result?.[0];
 
         return {
@@ -44,16 +57,15 @@ export const AcoesMercado = async (req: Request, res: Response) => {
         } as Acao;
       })
     );
-    
+
     const acoes = results
       .filter(r => r.status === "fulfilled")
-      .map((r: any) => r.value);
+      .map((r) => (r as PromiseFulfilledResult<Acao>).value);
 
-    // Logar os que falharam
     results
       .filter(r => r.status === "rejected")
-      .forEach((r: any, i) => {
-        // console.warn(`Ticker falhou: ${tickers[i].ticker}`, r.reason?.message || r.reason);
+      .forEach((r, i) => {
+        console.warn(`Ticker falhou: ${tickers[i].ticker}`, (r as PromiseRejectedResult).reason);
       });
 
     return res.json({ acoes });

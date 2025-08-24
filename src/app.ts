@@ -12,7 +12,7 @@ import cryptoRoutes from './routes/agressivoRoutes/crypto.routes'; // rotas de c
 import tesouroRoutes from './routes/convervadorRoutes/tesouro.routes'; // rotas de tesouro (conservador)
 import { AcoesMercado } from './controllers/controllers.moderado/actions.controller'; // rotas de ações (moderado)
 import emergingTechRoutes from "./routes/agressivoRoutes/emergingTech.routes";; // rotas de ações (agressivo)
-
+import { logoutUser } from "./controllers/logout.controller"; 
 dotenv.config(); //habilitando as variáveis de ambiente (privadas)
 
 const app = express(); //abrindo/executando o servidor

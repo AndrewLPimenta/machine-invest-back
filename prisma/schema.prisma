@@ -8,13 +8,13 @@ datasource db {
 }
 
 model Usuario {
-  id          Int       @id @default(autoincrement())
+  id          Int               @id @default(autoincrement())
   nome        String
-  email       String    @unique
+  email       String            @unique
   senhaHash   String
-  dataCriacao DateTime  @default(now())
+  dataCriacao DateTime          @default(now())
   respostas   RespostaUsuario[]
-  resultados  ResultadoUsuario[]
+  resultados  ResultadoUsuario?
 }
 
 model Formulario {
@@ -26,50 +26,47 @@ model Formulario {
 }
 
 model Pergunta {
-  id           Int       @id @default(autoincrement())
+  id           Int               @id @default(autoincrement())
   texto        String
   idFormulario Int
-  formulario   Formulario @relation(fields: [idFormulario], references: [id])
   opcoes       Opcao[]
+  formulario   Formulario        @relation(fields: [idFormulario], references: [id])
   respostas    RespostaUsuario[]
 }
 
 model Opcao {
-  id          Int       @id @default(autoincrement())
-  texto       String
-  pontuacao   Int
-  idPergunta  Int
-  pergunta    Pergunta  @relation(fields: [idPergunta], references: [id])
-  respostas   RespostaUsuario[]
+  id         Int               @id @default(autoincrement())
+  texto      String
+  pontuacao  Int
+  idPergunta Int
+  pergunta   Pergunta          @relation(fields: [idPergunta], references: [id])
+  respostas  RespostaUsuario[]
 }
 
 model RespostaUsuario {
-  id           Int       @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   idUsuario    Int
-  usuario      Usuario   @relation(fields: [idUsuario], references: [id])
   idPergunta   Int
-  pergunta     Pergunta  @relation(fields: [idPergunta], references: [id])
   idOpcao      Int
-  opcao        Opcao     @relation(fields: [idOpcao], references: [id])
-  dataResposta DateTime  @default(now())
+  dataResposta DateTime @default(now())
+  opcao        Opcao    @relation(fields: [idOpcao], references: [id])
+  pergunta     Pergunta @relation(fields: [idPergunta], references: [id])
+  usuario      Usuario  @relation(fields: [idUsuario], references: [id])
 }
 
 model PerfilInvestidor {
-  id          Int       @id @default(autoincrement())
-  nomePerfil  String    @unique
-  descricao   String
-  resultados  ResultadoUsuario[]
+  id         Int                @id @default(autoincrement())
+  nomePerfil String             @unique
+  descricao  String
+  resultados ResultadoUsuario[]
 }
-
 
 model ResultadoUsuario {
-  id               Int             @id @default(autoincrement())
-  idUsuario        Int             @unique  
-  usuario          Usuario         @relation(fields: [idUsuario], references: [id])
-  idPerfil         Int
-  perfil           PerfilInvestidor @relation(fields: [idPerfil], references: [id])
-  pontuacaoTotal   Int
-  dataClassificacao DateTime       @default(now())
+  id                Int              @id @default(autoincrement())
+  idUsuario         Int              @unique
+  idPerfil          Int
+  pontuacaoTotal    Int
+  dataClassificacao DateTime         @default(now())
+  perfil            PerfilInvestidor @relation(fields: [idPerfil], references: [id])
+  usuario           Usuario          @relation(fields: [idUsuario], references: [id])
 }
-
-
