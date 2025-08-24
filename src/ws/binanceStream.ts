@@ -10,10 +10,10 @@ interface BinanceTicker {
 interface BinanceWsMessage {
   stream: string;
   data: {
-    e: string;  // tipo de evento
-    E: number;  // timestamp
-    s: string;  // símbolo (ex: BTCUSDT)
-    c: string;  // último preço
+    e: string;
+    E: number;
+    s: string;
+    c: string;
   };
 }
 
@@ -25,10 +25,15 @@ async function atualizarTaxas() {
     const res = await fetch(
       'https://api.binance.com/api/v3/ticker/price?symbols=["USDTBRL","USDTEUR"]'
     );
-    const data = (await res.json()) as BinanceTicker[];
+    const data = (await res.json()) as unknown;
 
-    const brl = data.find(d => d.symbol === "USDTBRL");
-    const eur = data.find(d => d.symbol === "USDTEUR");
+    if (!Array.isArray(data)) {
+      console.warn("Dados inesperados das taxas:", data);
+      return;
+    }
+
+    const brl = data.find((d: BinanceTicker) => d.symbol === "USDTBRL");
+    const eur = data.find((d: BinanceTicker) => d.symbol === "USDTEUR");
 
     if (brl) taxas["BRL"] = parseFloat(brl.price);
     if (eur) taxas["EUR"] = parseFloat(eur.price);
@@ -39,7 +44,7 @@ async function atualizarTaxas() {
   }
 }
 
-// Busca preços iniciais e envia ao cliente
+// Envia preços iniciais ao cliente
 async function enviarPrecosIniciais(io: Server, pares: string[]) {
   try {
     const res = await fetch(
@@ -47,9 +52,14 @@ async function enviarPrecosIniciais(io: Server, pares: string[]) {
         .map(p => `"${p.toUpperCase()}"`)
         .join(',')}]`
     );
-    const data = (await res.json()) as BinanceTicker[];
+    const data = (await res.json()) as unknown;
 
-    data.forEach(d => {
+    if (!Array.isArray(data)) {
+      console.warn("Dados iniciais inesperados:", data);
+      return;
+    }
+
+    data.forEach((d: BinanceTicker) => {
       const precoUSD = parseFloat(d.price);
       io.emit('precoAtualizado', {
         symbol: d.symbol.replace('USDT', ''),
@@ -67,38 +77,18 @@ async function enviarPrecosIniciais(io: Server, pares: string[]) {
 setInterval(atualizarTaxas, 60_000);
 atualizarTaxas();
 
-// Inicia WebSocket Binance
 export default function startBinanceStream(io: Server) {
   const pares = [
-    'btcusdt', // Bitcoin
-    'ethusdt', // Ethereum
-    'bnbusdt', // Binance Coin
-    'adausdt', // Cardano
-    'xrpusdt', // XRP
-    'solusdt', // Solana
-    'dogeusdt', // Dogecoin
-    'maticusdt', // Polygon
-    'dotusdt', // Polkadot
-    'shibusdt', // Shiba Inu
-    'ltcusdt', // Litecoin
-    'avaxusdt', // Avalanche
-    'uniusdt', // Uniswap
-    'linkusdt', // Chainlink
-    'atomusdt', // Cosmos
-    'trxusdt', // TRON
-    'etcusdt', // Ethereum Classic
-    'xlmusdt', // Stellar
-    'nearusdt', // NEAR Protocol
-    'aptusdt'  // Aptos
+    'btcusdt', 'ethusdt', 'bnbusdt', 'adausdt', 'xrpusdt',
+    'solusdt', 'dogeusdt', 'maticusdt', 'dotusdt', 'shibusdt',
+    'ltcusdt', 'avaxusdt', 'uniusdt', 'linkusdt', 'atomusdt',
+    'trxusdt', 'etcusdt', 'xlmusdt', 'nearusdt', 'aptusdt'
   ];
 
-  // Envia preços iniciais antes de conectar WS
   enviarPrecosIniciais(io, pares);
 
-  const streams = pares.map((p) => `${p}@ticker`).join('/');
-  const ws = new WebSocket(
-    `wss://stream.binance.com:9443/stream?streams=${streams}`
-  );
+  const streams = pares.map(p => `${p}@ticker`).join('/');
+  const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
 
   ws.on('message', (msg: WebSocket.RawData) => {
     try {

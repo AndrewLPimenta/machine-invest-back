@@ -15,13 +15,22 @@ export const getPerfilUsuario = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Resultado não encontrado" });
     }
 
-    const totalPerguntas = await prisma.pergunta.count();
-    const percentual = Math.round((resultado.pontuacaoTotal / (totalPerguntas * 3)) * 100);
+    // Buscar todas as perguntas para calcular pontuação máxima
+    const perguntas = await prisma.pergunta.findMany({ include: { opcoes: true } });
+    const pontuacaoMaxima: number = perguntas.reduce(
+      (sum: number, p: { opcoes: { pontuacao: number }[] }) => {
+        const maxOpcao: number = Math.max(...p.opcoes.map((o: { pontuacao: number }) => o.pontuacao));
+        return sum + maxOpcao;
+      },
+      0
+    );
+
+    const percentual: number = (resultado.pontuacaoTotal / pontuacaoMaxima) * 100;
 
     res.json({
       perfil: resultado.perfil,
       pontuacao: resultado.pontuacaoTotal,
-      percentual,
+      percentual: Math.round(percentual),
       dataClassificacao: resultado.dataClassificacao,
     });
   } catch (error) {
@@ -33,16 +42,13 @@ export const getPerfilUsuario = async (req: Request, res: Response) => {
 // Calcular perfil do usuário
 export const calcularPerfil = async (req: Request, res: Response) => {
   try {
-    const { idUsuario } = req.body;
+    const { idUsuario } = req.body as { idUsuario: number };
 
     if (!idUsuario) {
       return res.status(400).json({ error: "idUsuario é obrigatório" });
     }
 
-    // Buscar total de perguntas do formulário
-    const totalPerguntas = await prisma.pergunta.count();
-
-    // Buscar respostas do usuário
+    // Buscar respostas do usuário com opções selecionadas
     const respostas = await prisma.respostaUsuario.findMany({
       where: { idUsuario },
       include: { opcao: true },
@@ -52,52 +58,43 @@ export const calcularPerfil = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Usuário não possui respostas" });
     }
 
-    if (respostas.length < totalPerguntas) {
-      return res.status(400).json({
-        error: `Faltam respostas. Você respondeu ${respostas.length} de ${totalPerguntas} perguntas.`,
-      });
-    }
+    // Somar pontuação total
+    const totalPontuacao: number = respostas.reduce(
+      (sum: number, r: { opcao?: { pontuacao: number } }) => sum + (r.opcao?.pontuacao ?? 0),
+      0
+    );
 
-    // Somar pontuação total garantindo que seja numérica
-    const totalPontuacao = respostas.reduce((sum, r) => {
-      const pontuacao = Number(r.opcao?.pontuacao ?? 0);
-      return sum + pontuacao;
+    // Buscar todas as perguntas para calcular pontuação máxima real
+    const perguntas = await prisma.pergunta.findMany({ include: { opcoes: true } });
+    const pontuacaoMaxima: number = perguntas.reduce((sum: number, p: { opcoes: { pontuacao: number }[] }) => {
+      const maxOpcao = Math.max(...p.opcoes.map(o => o.pontuacao));
+      return sum + maxOpcao;
     }, 0);
 
-    // Calcular percentual
-    const pontuacaoMaxima = totalPerguntas * 3;
-    const percentual = (totalPontuacao / pontuacaoMaxima) * 100;
+    // Percentual baseado na pontuação máxima real
+    const percentual: number = (totalPontuacao / pontuacaoMaxima) * 100;
 
-    // Determinar perfil baseado no percentual
+    // Determinar perfil com limites ajustados
     let idPerfil: number;
-    if (percentual <= 47) idPerfil = 1;      // Conservador
-    else if (percentual <= 73) idPerfil = 2; // Moderado
+    if (percentual <= 46) idPerfil = 1;      // Conservador
+    else if (percentual <= 70) idPerfil = 2; // Moderado
     else idPerfil = 3;                        // Agressivo
 
-    // Criar ou atualizar resultado do usuário
-    const resultadoExistente = await prisma.resultadoUsuario.findFirst({
+    // Upsert resultado do usuário
+    await prisma.resultadoUsuario.upsert({
       where: { idUsuario },
+      update: {
+        idPerfil,
+        pontuacaoTotal: totalPontuacao,
+        dataClassificacao: new Date(),
+      },
+      create: {
+        idUsuario,
+        idPerfil,
+        pontuacaoTotal: totalPontuacao,
+        dataClassificacao: new Date(),
+      },
     });
-
-    if (resultadoExistente) {
-      await prisma.resultadoUsuario.update({
-        where: { id: resultadoExistente.id },
-        data: {
-          idPerfil,
-          pontuacaoTotal: totalPontuacao,
-          dataClassificacao: new Date(),
-        },
-      });
-    } else {
-      await prisma.resultadoUsuario.create({
-        data: {
-          idUsuario,
-          idPerfil,
-          pontuacaoTotal: totalPontuacao,
-          dataClassificacao: new Date(),
-        },
-      });
-    }
 
     res.json({
       message: "Perfil calculado com sucesso",

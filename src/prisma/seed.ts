@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  // 1. Inserir perfis de investidor com createMany
+  // 1. Inserir perfis de investidor
   await prisma.perfilInvestidor.createMany({
     data: [
       { nomePerfil: 'Conservador', descricao: 'Perfil com menor risco, prioriza segurança do capital.' },
@@ -16,12 +16,12 @@ async function main() {
   // 2. Criar formulário
   const formulario = await prisma.formulario.create({
     data: {
-      titulo: 'Questionário de Perfil de Investidor',
+      titulo: 'Questionário Profissional de Perfil de Investidor',
       descricao: 'Formulário para classificar o perfil do investidor',
     },
   });
 
-  // 3. Inserir perguntas com múltiplas opções
+  // 3. Perguntas completas (antigas + novas) - todas múltipla escolha
   const perguntas = [
     {
       texto: 'Qual seu principal objetivo com os investimentos?',
@@ -103,8 +103,69 @@ async function main() {
         { texto: 'Menos de 50%', pontuacao: 3 },
       ],
     },
+    // Novas perguntas
+    {
+      texto: 'Qual sua experiência com investimentos?',
+      opcoes: [
+        { texto: 'Iniciante', pontuacao: 1 },
+        { texto: 'Intermediário', pontuacao: 2 },
+        { texto: 'Avançado', pontuacao: 3 },
+      ],
+    },
+    {
+      texto: 'Qual seu horizonte de investimento?',
+      opcoes: [
+        { texto: 'Curto prazo (até 2 anos)', pontuacao: 1 },
+        { texto: 'Médio prazo (2-5 anos)', pontuacao: 2 },
+        { texto: 'Longo prazo (mais de 5 anos)', pontuacao: 3 },
+      ],
+    },
+    {
+      texto: 'Como você reagiria a uma perda de 20% em seus investimentos?',
+      opcoes: [
+        { texto: 'Venderia tudo', pontuacao: 1 },
+        { texto: 'Manteria os investimentos', pontuacao: 2 },
+        { texto: 'Compraria mais', pontuacao: 3 },
+      ],
+    },
+    {
+      texto: 'Qual seu nível de conhecimento sobre o mercado financeiro?',
+      opcoes: [
+        { texto: 'Básico', pontuacao: 1 },
+        { texto: 'Intermediário', pontuacao: 2 },
+        { texto: 'Avançado', pontuacao: 3 },
+      ],
+    },
+    {
+      texto: 'Quais são seus objetivos de investimento?',
+      opcoes: [
+        { texto: 'Reserva de emergência', pontuacao: 1 },
+        { texto: 'Aposentadoria', pontuacao: 1 },
+        { texto: 'Comprar imóvel', pontuacao: 1 },
+        { texto: 'Educação dos filhos', pontuacao: 1 },
+        { texto: 'Viagens', pontuacao: 1 },
+        { texto: 'Renda extra', pontuacao: 1 },
+        { texto: 'Preservar patrimônio', pontuacao: 1 },
+      ],
+    },
+    {
+      texto: 'Em uma escala de 1 a 10, qual sua tolerância ao risco?',
+      opcoes: [
+        { texto: '1', pontuacao: 1 },
+        { texto: '2', pontuacao: 1 },
+        { texto: '3', pontuacao: 2 },
+        { texto: '4', pontuacao: 2 },
+        { texto: '5', pontuacao: 2 },
+        { texto: '6', pontuacao: 3 },
+        { texto: '7', pontuacao: 3 },
+        { texto: '8', pontuacao: 3 },
+        { texto: '9', pontuacao: 3 },
+        { texto: '10', pontuacao: 3 },
+      ],
+    },
   ];
 
+  // 4. Inserir perguntas no banco
   for (const pergunta of perguntas) {
     await prisma.pergunta.create({
       data: {

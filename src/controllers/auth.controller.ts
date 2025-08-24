@@ -75,7 +75,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
     // Checar se já respondeu
     const respondeu = user.respostas.length > 0;
-    const perfil = user.resultados.length > 0 ? user.resultados[0].perfil.nomePerfil : null;
+    const perfil = user.resultados?.perfil.nomePerfil || null;
 
     return res.status(200).json({
       status: "success",
