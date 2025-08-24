@@ -57,8 +57,12 @@ export const loginUser = async (req: Request, res: Response) => {
     const user = await prisma.usuario.findUnique({
       where: { email },
       include: {
-        resultados: { include: { perfil: true } },
         respostas: true,
+        resultados: {
+          include: { perfil: true },
+          orderBy: { dataClassificacao: "desc" }, // pega o mais recente
+          take: 1, // retorna só 1 resultado
+        },
       },
     });
 
@@ -75,7 +79,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
     // Checar se já respondeu
     const respondeu = user.respostas.length > 0;
-    const perfil = user.resultados?.perfil.nomePerfil || null;
+    const perfil = user.resultados[0]?.perfil?.nomePerfil || null;
 
     return res.status(200).json({
       status: "success",
@@ -84,7 +88,7 @@ export const loginUser = async (req: Request, res: Response) => {
         user: { id: user.id, nome: user.nome, email: user.email },
         token,
         respondeu, // 👈 flag se já respondeu
-        perfil,    // 👈 nome do perfil (se tiver)
+        perfil,    // 👈 nome do perfil mais recente
       },
     });
   } catch (error) {
