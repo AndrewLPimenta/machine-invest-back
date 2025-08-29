@@ -8,13 +8,17 @@ datasource db {
 }
 
 model Usuario {
-  id          Int               @id @default(autoincrement())
-  nome        String
-  email       String            @unique
-  senhaHash   String
-  dataCriacao DateTime          @default(now())
-  respostas   RespostaUsuario[]
-  resultados  ResultadoUsuario?
+  id                Int                @id @default(autoincrement())
+  nome              String
+  email             String             @unique
+  senhaHash         String
+  dataCriacao       DateTime           @default(now())
+  categoriasGasto   CategoriaGasto[]
+  gastos            Gasto[]
+  investimentos     Investimento[]
+  respostas         RespostaUsuario[]
+  resultados        ResultadoUsuario?
+  tiposInvestimento TipoInvestimento[]
 }
 
 model Formulario {
@@ -69,4 +73,59 @@ model ResultadoUsuario {
   dataClassificacao DateTime         @default(now())
   perfil            PerfilInvestidor @relation(fields: [idPerfil], references: [id])
   usuario           Usuario          @relation(fields: [idUsuario], references: [id])
+}
+
+model CategoriaGasto {
+  id          Int      @id @default(autoincrement())
+  nome        String
+  descricao   String?
+  idUsuario   Int
+  dataCriacao DateTime @default(now())
+  usuario     Usuario  @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  gastos      Gasto[]
+
+  @@map("CategoriaGasto")
+}
+
+model TipoInvestimento {
+  id            Int            @id @default(autoincrement())
+  nome          String
+  descricao     String?
+  idUsuario     Int
+  dataCriacao   DateTime       @default(now())
+  investimentos Investimento[]
+  usuario       Usuario        @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+
+  @@map("TipoInvestimento")
+}
+
+model Gasto {
+  id              Int             @id @default(autoincrement())
+  idUsuario       Int
+  valor           Float
+  descricao       String
+  idCategoria     Int?
+  tipoPeriodo     String          @default("MENSAL")
+  dataGasto       DateTime        @default(now())
+  dataCriacao     DateTime        @default(now())
+  dataAtualizacao DateTime        @default(now())
+  categoria       CategoriaGasto? @relation(fields: [idCategoria], references: [id])
+  usuario         Usuario         @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+
+  @@map("Gasto")
+}
+
+model Investimento {
+  id                 Int               @id @default(autoincrement())
+  idUsuario          Int
+  valor              Float
+  descricao          String?
+  idTipoInvestimento Int?
+  dataInvestimento   DateTime          @default(now())
+  dataCriacao        DateTime          @default(now())
+  dataAtualizacao    DateTime          @default(now())
+  tipoInvestimento   TipoInvestimento? @relation(fields: [idTipoInvestimento], references: [id])
+  usuario            Usuario           @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+
+  @@map("Investimento")
 }
