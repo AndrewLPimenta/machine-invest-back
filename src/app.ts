@@ -14,6 +14,7 @@ import { AcoesMercado } from './controllers/controllers.moderado/actions.control
 import emergingTechRoutes from "./routes/agressivoRoutes/emergingTech.routes"; // rotas de ações (agressivo)
 import { logoutUser } from "./controllers/logout.controller"; 
 import financeRoutes from './routes/finance.routes'; // NOVA ROTA PARA FINANÇAS
+import chatRoutes from "./routes/ai.routes";
 
 dotenv.config(); // habilitando as variáveis de ambiente (privadas)
 
@@ -34,8 +35,7 @@ app.use('/api', tesouroRoutes);
 app.use('/api/acoes', AcoesMercado);
 app.use("/api/stocks", emergingTechRoutes);
 app.use("/api/finance", financeRoutes); // NOVA ROTA PARA FINANÇAS
-
-// Rota de logout
+app.use("/api", chatRoutes);
 app.post("/api/logout", logoutUser);
 
 // Rota de teste para verificar se o servidor está funcionando
