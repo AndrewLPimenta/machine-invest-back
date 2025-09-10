@@ -44,7 +44,6 @@ export const sendMessage = async (req: Request, res: Response) => {
       chatCompletion.choices?.[0]?.message?.content ||
       "Não consegui gerar resposta.";
 
-    // Se houver instrução ou comentário antes do marcador </think>, pegue só o conteúdo após
     if (reply.includes("</think>")) {
       reply = reply.split("</think>")[1].trim();
     }

@@ -351,29 +351,29 @@ export const financeController = {
       const { valor, descricao, idTipoInvestimento, dataInvestimento } = req.body
       const userId = req.userId
       if (!userId) return res.status(401).json({ success: false, message: 'Usuário não autenticado' })
-
+  
       const existing = await prisma.investimento.findFirst({ where: { id: Number(id), idUsuario: userId } })
       if (!existing) return res.status(404).json({ success: false, message: 'Investimento não encontrado' })
-
+  
       const investimento = await prisma.investimento.update({
         where: { id: Number(id) },
         data: {
-          valor: valor ? parseFloat(valor) : undefined,
-          descricao,
-          idTipoInvestimento: idTipoInvestimento ? Number(idTipoInvestimento) : null,
-          dataInvestimento: dataInvestimento ? new Date(dataInvestimento) : undefined,
+          descricao: descricao ?? existing.descricao,
+          valor: valor !== undefined ? parseFloat(valor) : existing.valor,
+          idTipoInvestimento: idTipoInvestimento ? Number(idTipoInvestimento) : existing.idTipoInvestimento,
+          dataInvestimento: dataInvestimento ? new Date(dataInvestimento) : existing.dataInvestimento,
           dataAtualizacao: new Date(),
         },
         include: { tipoInvestimento: true },
       })
-
+  
       res.json({ success: true, data: investimento, message: 'Investimento atualizado com sucesso' })
     } catch (error: any) {
-      console.error(error)
+      console.error("Erro ao atualizar investimento:", error)
       res.status(500).json({ success: false, message: error.message })
     }
   },
-
+  
   async deleteInvestment(req: AuthRequest, res: Response) {
     try {
       const { id } = req.params

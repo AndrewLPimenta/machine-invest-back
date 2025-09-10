@@ -19,10 +19,8 @@ export const salvarRespostas = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
-    // Deleta respostas antigas
     await prisma.respostaUsuario.deleteMany({ where: { idUsuario } });
 
-    // Salva respostas novas
     const respostasCriadas = await Promise.all(
       respostas.map((resp) =>
         prisma.respostaUsuario.create({
@@ -35,7 +33,6 @@ export const salvarRespostas = async (req: Request, res: Response) => {
       ),
     );
 
-    // Soma pontuações
     const totalPontuacao = await prisma.opcao.aggregate({
       _sum: { pontuacao: true },
       where: { id: { in: respostas.map(r => r.idOpcao) } },
@@ -43,13 +40,11 @@ export const salvarRespostas = async (req: Request, res: Response) => {
 
     const pontuacaoTotal = totalPontuacao._sum.pontuacao ?? 0;
 
-    // Define perfil baseado na pontuação
     let perfilId: number;
-    if (pontuacaoTotal <= 10) perfilId = 1; // Conservador
-    else if (pontuacaoTotal <= 20) perfilId = 2; // Moderado
-    else perfilId = 3; // Agressivo
+    if (pontuacaoTotal <= 10) perfilId = 1; 
+    else if (pontuacaoTotal <= 20) perfilId = 2;
+    else perfilId = 3; 
 
-    // Upsert resultado
     await prisma.resultadoUsuario.upsert({
       where: { idUsuario },
       update: {
