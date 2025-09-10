@@ -6,7 +6,7 @@
     "dev": "nodemon --watch \"src/**/*.ts\" --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "postinstall": "prisma generate && prisma migrate deploy && npm run build",
+    "postinstall": "prisma generate && npm run build",
     "seed": "ts-node src/prisma/seed.ts"
   },
   "dependencies": {
