@@ -1,17 +1,12 @@
+// src/prisma/client.ts
 import { PrismaClient } from "@prisma/client";
 
-export const prisma = new PrismaClient();
+const globalForPrisma = global as unknown as { prisma?: PrismaClient };
 
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: ["query", "error"],
+  });
 
-async function main() {
-  try {
-    const usuarios = await prisma.usuario.findMany();
-    console.log("Usuários encontrados:", usuarios);
-  } catch (error) {
-    console.error("Erro ao conectar ou buscar dados:", error);
-  } finally {
-    await prisma.$disconnect();
-  }
-}
-
-main();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
