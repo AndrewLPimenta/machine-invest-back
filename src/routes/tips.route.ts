@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { getTips, getRandomTip } from "../controllers/tips.controller";
+import { authenticate } from "../middlewares/authenticate";
 
 const router = Router();
 
-router.get("/dicas", getTips);       // todas as dicas para um usuário
-router.get("/dica", getRandomTip);   // dica aleatória para um usuário
+// Todas as rotas de dicas precisam de autenticação
+router.get("/dicas", authenticate, getTips);       // todas as dicas
+router.get("/dica", authenticate, getRandomTip);   // dica aleatória
 
 export default router;
